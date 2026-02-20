@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shared-models"
+version = "0.1.0"
+description = "Shared Pydantic models for social-coach backend services"
+requires-python = ">=3.9"
+dependencies = ["pydantic>=2.0"]
+
+[tool.setuptools.package-dir]
+shared_models = "."
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shared_models"]

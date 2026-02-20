@@ -1,5 +1,34 @@
 # Welcome to your Lovable project
 
+## Architecture
+
+The app is an autism social communication assistant with a React frontend and a multi-service FastAPI backend. The frontend talks only to the **orchestrator**; the orchestrator coordinates YOLO (face detection), emotion recognition, ASR (Whisper/diarization), and LLM services.
+
+```mermaid
+flowchart LR
+  subgraph frontend [React Frontend :8080]
+    MeetingPage
+    ExplanationPanel
+    CoachPanel
+  end
+  subgraph backend [Backend]
+    Orch[Orchestrator :8000]
+    YOLO[YOLO Service :8001]
+    Emotion[Emotion Service :8002]
+    ASR[ASR Service :8003]
+    LLM[LLM Service :8004]
+  end
+  MeetingPage -->|POST /analyze-message| Orch
+  CoachPanel -->|chat message| MeetingPage
+  Orch -->|POST /explain-turn| LLM
+  Orch -.->|future: frames| YOLO
+  Orch -.->|future: faces| Emotion
+  Orch -.->|future: audio| ASR
+```
+
+- **Orchestrator** (port 8000): Single entry point for the frontend; implements `POST /analyze-message` (chat → LLM) and a stubbed `POST /analyze-media` for future video/audio.
+- **YOLO / Emotion / ASR / LLM** (ports 8001–8004): Separate FastAPI services, each runnable in its own conda environment. Dotted lines indicate planned media pipeline (frames → faces → emotions; audio → transcripts; fusion → LLM).
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
