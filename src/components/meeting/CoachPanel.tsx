@@ -16,10 +16,12 @@ interface CoachPanelProps {
 const CoachPanel = ({ isOpen, onClose, captions, explanation }: CoachPanelProps) => {
   const [message, setMessage] = useState("");
 
-  if (!isOpen) return null;
-
   return (
-    <aside className="w-[360px] flex flex-col shrink-0 bg-[#1e1e1e] rounded-xl m-2 ml-0 overflow-hidden">
+    <aside
+      className={`w-[360px] flex flex-col shrink-0 bg-[#1e1e1e] rounded-xl m-2 ml-0 overflow-hidden transition-all duration-300 ease-in-out ${
+        isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none w-0 m-0"
+      }`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <h2 className="text-[15px] font-medium text-[#e3e3e3]">
