@@ -22,17 +22,6 @@ const VideoGrid = ({ participants, activeSpeakerId }: VideoGridProps) => {
         />
       </div>
 
-      {/* Small tile strip — bottom-right like Meet */}
-      <div className="absolute bottom-20 right-4 flex gap-2 z-10">
-        {others.map((p) => (
-          <ParticipantTile
-            key={p.id}
-            participant={p}
-            isActiveSpeaker={activeSpeakerId === p.id}
-            variant="small"
-          />
-        ))}
-      </div>
     </div>
   );
 };
