@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, MessageSquare } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, MessageSquare, MonitorUp, SmilePlus, MoreVertical, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BottomControlsProps {
@@ -8,6 +8,7 @@ interface BottomControlsProps {
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onToggleCoach: () => void;
+  onEndSession: () => void;
 }
 
 const BottomControls = ({
@@ -17,34 +18,62 @@ const BottomControls = ({
   onToggleMic,
   onToggleCamera,
   onToggleCoach,
+  onEndSession,
 }: BottomControlsProps) => {
   return (
-    <div className="flex justify-center py-4 px-4">
-      <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-full px-4 py-2 border border-border shadow-lg">
+    <div className="flex items-center justify-center py-3 px-4 relative z-20">
+      <div className="flex items-center gap-2">
+        {/* Mic */}
         <Button
-          variant={micOn ? "ghost" : "destructive"}
+          variant="ghost"
           size="icon"
-          className="rounded-full h-11 w-11"
+          className={`rounded-full h-10 w-10 ${!micOn ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
           onClick={onToggleMic}
         >
           {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </Button>
 
+        {/* Camera */}
         <Button
-          variant={cameraOn ? "ghost" : "destructive"}
+          variant="ghost"
           size="icon"
-          className="rounded-full h-11 w-11"
+          className={`rounded-full h-10 w-10 ${!cameraOn ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
           onClick={onToggleCamera}
         >
           {cameraOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
         </Button>
 
-        <div className="w-px h-6 bg-border mx-1" />
+        {/* Present / Screen share (placeholder) */}
+        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          <MonitorUp className="h-5 w-5" />
+        </Button>
 
+        {/* Reactions (placeholder) */}
+        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          <SmilePlus className="h-5 w-5" />
+        </Button>
+
+        {/* More */}
+        <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 bg-secondary text-secondary-foreground hover:bg-secondary/80">
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+
+        {/* End call */}
         <Button
-          variant={coachOpen ? "default" : "ghost"}
           size="icon"
-          className="rounded-full h-11 w-11"
+          className="rounded-full h-10 w-14 bg-destructive text-destructive-foreground hover:bg-destructive/90 ml-2"
+          onClick={onEndSession}
+        >
+          <PhoneOff className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Right-side icons */}
+      <div className="absolute right-4 flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`rounded-full h-9 w-9 ${coachOpen ? "text-primary" : "text-muted-foreground"}`}
           onClick={onToggleCoach}
         >
           <MessageSquare className="h-5 w-5" />

@@ -34,11 +34,14 @@
 
     --radius: 0.75rem;
 
-    --coach-bg: 210 25% 96%;
-    --coach-fg: 220 20% 14%;
-    --coach-muted: 215 15% 58%;
-    --coach-border: 214 25% 88%;
-    --coach-card: 0 0% 100%;
+    --coach-bg: 220 16% 16%;
+    --coach-fg: 210 20% 90%;
+    --coach-muted: 215 12% 52%;
+    --coach-border: 220 14% 24%;
+    --coach-card: 220 16% 20%;
+
+    --meet-surface: 160 8% 30%;
+    --meet-bg: 220 20% 12%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
