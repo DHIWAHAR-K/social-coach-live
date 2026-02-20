@@ -4,13 +4,15 @@ import { participants, scriptLines } from "@/data/mockConversation";
 import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
-
+import ExplanationPanel from "@/components/meeting/ExplanationPanel";
 const MeetingPage = () => {
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
+  const [explanationPanelOpen, setExplanationPanelOpen] = useState(true);
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
+  const [explanations, setExplanations] = useState<Explanation[]>([]);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
   const [scriptIndex, setScriptIndex] = useState(0);
   const [sessionEnded, setSessionEnded] = useState(false);
@@ -39,6 +41,7 @@ const MeetingPage = () => {
 
     setCaptions((prev) => [...prev, newCaption]);
     setExplanation(newExplanation);
+    setExplanations((prev) => [...prev, newExplanation]);
     setActiveSpeakerId(line.speakerId);
     setScriptIndex((prev) => prev + 1);
   }, [scriptIndex]);
@@ -70,6 +73,13 @@ const MeetingPage = () => {
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
+      {/* Left explanation panel */}
+      <ExplanationPanel
+        isOpen={explanationPanelOpen}
+        onClose={() => setExplanationPanelOpen(false)}
+        explanations={explanations}
+      />
+
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
@@ -87,9 +97,11 @@ const MeetingPage = () => {
           micOn={micOn}
           cameraOn={cameraOn}
           coachOpen={coachOpen}
+          explanationOpen={explanationPanelOpen}
           onToggleMic={() => setMicOn((v) => !v)}
           onToggleCamera={() => setCameraOn((v) => !v)}
           onToggleCoach={() => setCoachOpen((v) => !v)}
+          onToggleExplanation={() => setExplanationPanelOpen((v) => !v)}
           onEndSession={handleEndSession}
         />
       </div>
