@@ -3,21 +3,46 @@ import { Participant } from "@/types/meeting";
 interface ParticipantTileProps {
   participant: Participant;
   isActiveSpeaker: boolean;
+  variant?: "large" | "small";
 }
 
-const ParticipantTile = ({ participant, isActiveSpeaker }: ParticipantTileProps) => {
+const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large" }: ParticipantTileProps) => {
+  if (variant === "small") {
+    return (
+      <div
+        className="relative rounded-lg overflow-hidden flex items-center justify-center w-28 h-20 shrink-0"
+        style={{
+          backgroundColor: `hsl(${participant.color} / 0.2)`,
+          boxShadow: isActiveSpeaker
+            ? `0 0 0 2px hsl(${participant.color})`
+            : "0 0 0 1px hsl(var(--border))",
+        }}
+      >
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
+          style={{
+            backgroundColor: `hsl(${participant.color} / 0.35)`,
+            color: `hsl(${participant.color})`,
+          }}
+        >
+          {participant.initial}
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 px-2 py-0.5 bg-gradient-to-t from-black/60 to-transparent">
+          <span className="text-[10px] font-medium text-white/80">{participant.name}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="relative rounded-xl overflow-hidden aspect-video flex items-center justify-center transition-all duration-300"
+      className="rounded-xl overflow-hidden flex items-center justify-center w-full h-full max-w-3xl max-h-[70vh]"
       style={{
-        backgroundColor: `hsl(${participant.color} / 0.15)`,
-        boxShadow: isActiveSpeaker
-          ? `0 0 0 3px hsl(${participant.color}), 0 0 20px hsl(${participant.color} / 0.25)`
-          : "0 0 0 1px hsl(var(--border))",
+        backgroundColor: `hsl(var(--meet-surface))`,
       }}
     >
       <div
-        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-2xl sm:text-3xl font-semibold"
+        className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
         style={{
           backgroundColor: `hsl(${participant.color} / 0.3)`,
           color: `hsl(${participant.color})`,
@@ -26,24 +51,10 @@ const ParticipantTile = ({ participant, isActiveSpeaker }: ParticipantTileProps)
         {participant.initial}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">
-        <span className="text-sm font-medium text-white/90">{participant.name}</span>
+      {/* Name at bottom-left of main view, Google Meet style */}
+      <div className="absolute bottom-2 left-4">
+        <span className="text-xs font-medium text-muted-foreground">{participant.name}</span>
       </div>
-
-      {isActiveSpeaker && (
-        <div className="absolute top-2.5 right-2.5">
-          <span className="flex h-2.5 w-2.5">
-            <span
-              className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-              style={{ backgroundColor: `hsl(${participant.color})` }}
-            />
-            <span
-              className="relative inline-flex rounded-full h-2.5 w-2.5"
-              style={{ backgroundColor: `hsl(${participant.color})` }}
-            />
-          </span>
-        </div>
-      )}
     </div>
   );
 };

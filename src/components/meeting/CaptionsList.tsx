@@ -20,11 +20,11 @@ const CaptionsList = ({ captions }: CaptionsListProps) => {
   }, [captions.length]);
 
   return (
-    <ScrollArea className="flex-1 px-4 py-2">
+    <ScrollArea className="flex-1 px-4 py-3">
       <div className="space-y-3">
         {captions.length === 0 && (
-          <p className="text-sm italic" style={{ color: "hsl(var(--coach-muted))" }}>
-            Waiting for conversation to start…
+          <p className="text-xs" style={{ color: "hsl(var(--coach-muted))" }}>
+            Messages will appear here…
           </p>
         )}
         {captions.map((c) => {
@@ -32,12 +32,12 @@ const CaptionsList = ({ captions }: CaptionsListProps) => {
           return (
             <div key={c.id} className="text-sm leading-relaxed">
               <span
-                className="font-semibold mr-1.5"
+                className="font-medium mr-1.5 text-xs"
                 style={{ color: `hsl(${color})` }}
               >
-                {c.speakerName}:
+                {c.speakerName}
               </span>
-              <span style={{ color: "hsl(var(--coach-fg))" }}>{c.text}</span>
+              <span className="text-xs" style={{ color: "hsl(var(--coach-fg))" }}>{c.text}</span>
             </div>
           );
         })}
