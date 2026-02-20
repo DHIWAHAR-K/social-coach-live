@@ -74,21 +74,6 @@ const CoachPanel = ({ isOpen, onClose, captions, explanation }: CoachPanelProps)
         </div>
       </div>
 
-      {/* Bottom icons */}
-      <div className="flex items-center justify-center gap-6 py-3 border-t border-[#303134]">
-        <button className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors">
-          <Info className="h-5 w-5" />
-        </button>
-        <button className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors">
-          <Monitor className="h-5 w-5" />
-        </button>
-        <button className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors">
-          <Grid3X3 className="h-5 w-5" />
-        </button>
-        <button className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors">
-          <Lock className="h-5 w-5" />
-        </button>
-      </div>
     </aside>
   );
 };
