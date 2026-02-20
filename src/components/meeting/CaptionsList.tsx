@@ -2,15 +2,16 @@ import { Caption } from "@/types/meeting";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef } from "react";
 import { participants } from "@/data/mockConversation";
+import { Pin } from "lucide-react";
 
 interface CaptionsListProps {
   captions: Caption[];
 }
 
-const speakerColorMap: Record<string, string> = {};
-participants.forEach((p) => {
-  speakerColorMap[p.id] = p.color;
-});
+const formatTime = (ts: number) => {
+  const d = new Date(ts);
+  return `${d.getHours()}:${d.getMinutes().toString().padStart(2, "0")}`;
+};
 
 const CaptionsList = ({ captions }: CaptionsListProps) => {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -21,26 +22,25 @@ const CaptionsList = ({ captions }: CaptionsListProps) => {
 
   return (
     <ScrollArea className="flex-1 px-4 py-3">
-      <div className="space-y-3">
+      <div className="space-y-2">
         {captions.length === 0 && (
-          <p className="text-xs" style={{ color: "hsl(var(--coach-muted))" }}>
-            Messages will appear here…
+          <p className="text-[12px] text-[#9aa0a6] text-center mt-8">
+            No messages yet
           </p>
         )}
-        {captions.map((c) => {
-          const color = speakerColorMap[c.speakerId] || "210 10% 50%";
-          return (
-            <div key={c.id} className="text-sm leading-relaxed">
-              <span
-                className="font-medium mr-1.5 text-xs"
-                style={{ color: `hsl(${color})` }}
-              >
-                {c.speakerName}
-              </span>
-              <span className="text-xs" style={{ color: "hsl(var(--coach-fg))" }}>{c.text}</span>
+        {captions.map((c) => (
+          <div key={c.id} className="flex flex-col items-end gap-0.5">
+            <span className="text-[11px] text-[#9aa0a6]">{formatTime(c.timestamp)}</span>
+            <div className="group relative bg-[#1a73e8] rounded-2xl rounded-br-sm px-3.5 py-2 max-w-[85%]">
+              <p className="text-[13px] text-white font-medium">{c.speakerName}</p>
+              <p className="text-[13px] text-[#e8eaed] leading-relaxed">{c.text}</p>
+              <div className="flex items-center gap-1 mt-1 text-[11px] text-[#a8c7fa]">
+                <span>Hover over a message to pin it</span>
+                <Pin className="h-3 w-3" />
+              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
         <div ref={bottomRef} />
       </div>
     </ScrollArea>
