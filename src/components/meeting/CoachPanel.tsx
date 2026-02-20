@@ -18,8 +18,8 @@ const CoachPanel = ({ isOpen, onClose, captions, explanation }: CoachPanelProps)
 
   return (
     <aside
-      className={`flex flex-col shrink-0 bg-[#1e1e1e] rounded-xl overflow-hidden transition-all duration-300 ease-in-out ${
-        isOpen ? "w-[360px] m-2 ml-0 opacity-100" : "w-0 opacity-0 pointer-events-none"
+      className={`flex flex-col shrink-0 bg-[#1e1e1e] overflow-hidden transition-all duration-300 ease-in-out border-l border-[#303134] ${
+        isOpen ? "w-[360px] opacity-100" : "w-0 opacity-0 pointer-events-none border-l-0"
       }`}
     >
       {/* Header */}
