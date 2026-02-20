@@ -52,7 +52,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large" }: Pa
       </div>
 
       {/* Name at bottom-left of main view, Google Meet style */}
-      <div className="absolute bottom-2 left-4">
+      <div className="absolute bottom-2 right-4">
         <span className="text-xs font-medium text-muted-foreground">{participant.name}</span>
       </div>
     </div>
