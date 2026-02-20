@@ -1,13 +1,15 @@
-import { Mic, MicOff, Video, VideoOff, MessageSquare, MonitorUp, SmilePlus, MoreVertical, PhoneOff } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, MessageSquare, MonitorUp, SmilePlus, MoreVertical, PhoneOff, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BottomControlsProps {
   micOn: boolean;
   cameraOn: boolean;
   coachOpen: boolean;
+  explanationOpen: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onToggleCoach: () => void;
+  onToggleExplanation: () => void;
   onEndSession: () => void;
 }
 
@@ -15,9 +17,11 @@ const BottomControls = ({
   micOn,
   cameraOn,
   coachOpen,
+  explanationOpen,
   onToggleMic,
   onToggleCamera,
   onToggleCoach,
+  onToggleExplanation,
   onEndSession,
 }: BottomControlsProps) => {
   return (
@@ -65,6 +69,18 @@ const BottomControls = ({
           onClick={onEndSession}
         >
           <PhoneOff className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Left-side icon */}
+      <div className="absolute left-4 flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`rounded-full h-9 w-9 ${explanationOpen ? "text-primary" : "text-muted-foreground"}`}
+          onClick={onToggleExplanation}
+        >
+          <Brain className="h-5 w-5" />
         </Button>
       </div>
 
