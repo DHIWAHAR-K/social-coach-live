@@ -35,7 +35,7 @@ export function useFrameCapture(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.drawImage(video, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.7");
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
       const image_base64 = dataUrl.startsWith(DATA_URL_PREFIX)
         ? dataUrl.slice(DATA_URL_PREFIX.length)
         : dataUrl;
