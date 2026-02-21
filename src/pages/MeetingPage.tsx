@@ -17,6 +17,7 @@ const MeetingPage = () => {
   const { toast } = useToast();
   const { startCapture, stopCapture } = useMediaCapture();
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
   const [explanationPanelOpen, setExplanationPanelOpen] = useState(true);
@@ -130,19 +131,15 @@ const MeetingPage = () => {
   const handleToggleCamera = useCallback(async () => {
     try {
       if (cameraOn) {
-        const stream = localVideoRef.current?.srcObject as MediaStream | null | undefined;
-        if (stream?.getVideoTracks) {
-          stream.getVideoTracks().forEach((t) => t.stop());
-        }
+        cameraStreamRef.current?.getVideoTracks().forEach((t) => t.stop());
+        cameraStreamRef.current = null;
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = null;
         }
         setCameraOn(false);
       } else {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
+        cameraStreamRef.current = stream;
         setCameraOn(true);
       }
     } catch (err) {
@@ -153,6 +150,13 @@ const MeetingPage = () => {
       });
     }
   }, [cameraOn, toast]);
+
+  // Attach stream to video element after render when camera turns on
+  useEffect(() => {
+    if (cameraOn && cameraStreamRef.current && localVideoRef.current) {
+      localVideoRef.current.srcObject = cameraStreamRef.current;
+    }
+  }, [cameraOn]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
