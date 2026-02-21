@@ -16,11 +16,10 @@ const PARTICIPANTS: Participant[] = [
 const MeetingPage = () => {
   const { toast } = useToast();
   const { startCapture, stopCapture } = useMediaCapture();
-  const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
   const [explanationPanelOpen, setExplanationPanelOpen] = useState(true);
-  const [liveCoachOn, setLiveCoachOn] = useState(false);
+  const [liveCoachOn, setLiveCoachOn] = useState(false); // center mic = Live Coach on/off
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [explanations, setExplanations] = useState<Explanation[]>([]);
@@ -145,16 +144,14 @@ const MeetingPage = () => {
 
         {/* Bottom controls */}
         <BottomControls
-          micOn={micOn}
+          micOn={liveCoachOn}
+          onToggleMic={handleToggleLiveCoach}
           cameraOn={cameraOn}
           coachOpen={coachOpen}
           explanationOpen={explanationPanelOpen}
-          liveCoachOn={liveCoachOn}
-          onToggleMic={() => setMicOn((v) => !v)}
           onToggleCamera={() => setCameraOn((v) => !v)}
           onToggleCoach={() => setCoachOpen((v) => !v)}
           onToggleExplanation={() => setExplanationPanelOpen((v) => !v)}
-          onToggleLiveCoach={handleToggleLiveCoach}
           onEndSession={handleEndSession}
         />
       </div>

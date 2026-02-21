@@ -1,17 +1,15 @@
-import { Mic, MicOff, Video, VideoOff, MessageSquare, MonitorUp, SmilePlus, MoreVertical, PhoneOff, Brain, Radio } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, MessageSquare, MonitorUp, SmilePlus, MoreVertical, PhoneOff, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BottomControlsProps {
-  micOn: boolean;
+  micOn: boolean; // center mic = Live Coach on/off
   cameraOn: boolean;
   coachOpen: boolean;
   explanationOpen: boolean;
-  liveCoachOn: boolean;
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onToggleCoach: () => void;
   onToggleExplanation: () => void;
-  onToggleLiveCoach: () => void;
   onEndSession: () => void;
 }
 
@@ -20,25 +18,29 @@ const BottomControls = ({
   cameraOn,
   coachOpen,
   explanationOpen,
-  liveCoachOn,
   onToggleMic,
   onToggleCamera,
   onToggleCoach,
   onToggleExplanation,
-  onToggleLiveCoach,
   onEndSession,
 }: BottomControlsProps) => {
   return (
     <div className="flex items-center justify-center py-3 px-4 relative z-20">
       <div className="flex items-center gap-2">
-        {/* Mic */}
+        {/* Center mic = Live Coach (start/stop capture + explanations) */}
         <Button
           variant="ghost"
           size="icon"
-          className={`rounded-full h-10 w-10 ${!micOn ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+          className={`rounded-full h-10 w-10 relative ${!micOn ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
           onClick={onToggleMic}
         >
           {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+          {micOn && (
+            <span
+              className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse"
+              aria-label="Live Coach listening"
+            />
+          )}
         </Button>
 
         {/* Camera */}
@@ -76,7 +78,7 @@ const BottomControls = ({
         </Button>
       </div>
 
-      {/* Left-side icons */}
+      {/* Left-side: Social Coach panel toggle only */}
       <div className="absolute left-4 flex items-center gap-1">
         <Button
           variant="ghost"
@@ -85,20 +87,6 @@ const BottomControls = ({
           onClick={onToggleExplanation}
         >
           <Brain className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`rounded-full h-9 w-9 relative ${liveCoachOn ? "text-primary" : "text-muted-foreground"}`}
-          onClick={onToggleLiveCoach}
-        >
-          <Radio className="h-5 w-5" />
-          {liveCoachOn && (
-            <span
-              className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 animate-pulse"
-              aria-label="Live"
-            />
-          )}
         </Button>
       </div>
 
