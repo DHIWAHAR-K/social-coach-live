@@ -13,9 +13,9 @@ const VideoGrid = ({ participants, activeSpeakerId, localVideoRef }: VideoGridPr
   const others = participants.filter((p) => p.id !== mainSpeaker.id);
 
   return (
-    <div className="flex-1 relative" style={{ backgroundColor: "hsl(var(--meet-surface))" }}>
+    <div className="flex-1 relative bg-black">
       {/* Main large tile */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div className="absolute inset-0">
         <ParticipantTile
           participant={mainSpeaker}
           isActiveSpeaker={activeSpeakerId === mainSpeaker.id}
