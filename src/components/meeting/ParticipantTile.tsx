@@ -52,20 +52,25 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
         />
       )}
       {!streamRef && (
-        <div
-          className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
-          style={{
-            backgroundColor: `hsl(${participant.color} / 0.3)`,
-            color: `hsl(${participant.color})`,
-          }}
-        >
-          {participant.initial}
+        <div className="flex flex-col items-center justify-center">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
+            style={{
+              backgroundColor: `hsl(${participant.color} / 0.3)`,
+              color: `hsl(${participant.color})`,
+            }}
+          >
+            {participant.initial}
+          </div>
+          <p className="mt-3 text-white/80 text-sm font-medium">{participant.name}</p>
         </div>
       )}
 
-      {/* Name at bottom-left of main view, Google Meet style */}
-      <div className="absolute bottom-2 left-3">
-        <span className="text-xs font-medium text-white/90">{participant.name}</span>
+      {/* Name pill at bottom-left, Google Meet style */}
+      <div className="absolute bottom-3 left-3">
+        <span className="inline-flex items-center bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+          {participant.name}
+        </span>
       </div>
     </div>
   );
