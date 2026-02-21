@@ -7,6 +7,7 @@ import ExplanationPanel from "@/components/meeting/ExplanationPanel";
 import { analyzeMessage, analyzeMedia, formatExplanationForPanel } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaCapture } from "@/hooks/useMediaCapture";
+import { useFrameCapture } from "@/hooks/useFrameCapture";
 
 const PARTICIPANTS: Participant[] = [
   { id: "you", name: "You", color: "210 60% 45%", initial: "Y", isLocal: true },
@@ -17,6 +18,7 @@ const MeetingPage = () => {
   const { toast } = useToast();
   const { startCapture, stopCapture } = useMediaCapture();
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const { startFrameCapture, stopFrameCapture, drainFrames } = useFrameCapture(localVideoRef, 1000);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
@@ -76,7 +78,7 @@ const MeetingPage = () => {
     async (chunk: import("@/lib/api").AudioChunk): Promise<void> => {
       try {
         const response = await analyzeMedia({
-          frames: [],
+          frames: drainFrames(),
           audio_chunks: [chunk],
         });
         const turns = response.turns as { turn_id: string; speaker_id: string; speaker_name: string; text: string; start: number }[];
@@ -107,16 +109,18 @@ const MeetingPage = () => {
         });
       }
     },
-    [toast]
+    [toast, drainFrames]
   );
 
   const handleToggleLiveCoach = useCallback(async () => {
     if (liveCoachOn) {
+      stopFrameCapture();
       stopCapture();
       setLiveCoachOn(false);
       return;
     }
     try {
+      startFrameCapture();
       await startCapture(handleChunkReady);
       setLiveCoachOn(true);
     } catch (err) {
@@ -126,7 +130,7 @@ const MeetingPage = () => {
         variant: "destructive",
       });
     }
-  }, [liveCoachOn, startCapture, stopCapture, handleChunkReady, toast]);
+  }, [liveCoachOn, startFrameCapture, stopFrameCapture, startCapture, stopCapture, handleChunkReady, toast]);
 
   const handleToggleCamera = useCallback(async () => {
     try {
