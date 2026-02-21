@@ -37,9 +37,9 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden flex items-center justify-center w-full h-full max-w-3xl max-h-[70vh]"
+      className="relative rounded-lg overflow-hidden flex items-center justify-center w-full h-full"
       style={{
-        backgroundColor: `hsl(var(--meet-surface))`,
+        backgroundColor: "#000000",
       }}
     >
       {streamRef && (
@@ -48,7 +48,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover absolute inset-0 rounded-xl"
+          className="w-full h-full object-cover absolute inset-0"
         />
       )}
       {!streamRef && (
@@ -64,8 +64,8 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
       )}
 
       {/* Name at bottom-left of main view, Google Meet style */}
-      <div className="absolute bottom-2 right-4">
-        <span className="text-xs font-medium text-muted-foreground">{participant.name}</span>
+      <div className="absolute bottom-2 left-3">
+        <span className="text-xs font-medium text-white/90">{participant.name}</span>
       </div>
     </div>
   );
