@@ -57,8 +57,13 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
     if (cw === 0 || ch === 0) return;
     canvas.width = cw;
     canvas.height = ch;
-    const scaleX = cw / (frameSourceWidth ?? 640);
-    const scaleY = ch / (frameSourceHeight ?? 480);
+    // object-cover applies a single uniform scale then center-crops.
+    // Using two separate axis ratios causes misalignment on non-matching aspect ratios.
+    const fw = frameSourceWidth ?? 640;
+    const fh = frameSourceHeight ?? 480;
+    const scale = Math.max(cw / fw, ch / fh);
+    const offsetX = (fw * scale - cw) / 2;
+    const offsetY = (fh * scale - ch) / 2;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, cw, ch);
@@ -68,10 +73,10 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
       const [x, y, w, h] = face.bbox;
       if (face.bbox.length < 4) continue;
       ctx.strokeRect(
-        Math.round(x * scaleX),
-        Math.round(y * scaleY),
-        Math.round(w * scaleX),
-        Math.round(h * scaleY)
+        Math.round(x * scale - offsetX),
+        Math.round(y * scale - offsetY),
+        Math.round(w * scale),
+        Math.round(h * scale)
       );
     }
   }, [streamRef, detectedFaces, frameSourceWidth, frameSourceHeight]);
