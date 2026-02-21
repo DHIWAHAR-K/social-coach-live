@@ -172,7 +172,7 @@ const MeetingPage = () => {
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
-        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} />
+        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} cameraOn={cameraOn} />
 
         {/* Bottom-left meeting info */}
         <div className="absolute bottom-20 left-4 flex items-center gap-3 text-xs text-muted-foreground">
