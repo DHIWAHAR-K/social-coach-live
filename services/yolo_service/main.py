@@ -25,6 +25,11 @@ app = FastAPI(title="YOLO Face Detection Service")
 # Confidence threshold for detections
 CONFIDENCE_THRESHOLD = float(__import__("os").environ.get("FACE_CONFIDENCE_THRESHOLD", "0.5"))
 
+# Fractional padding added to each side of the raw Haar-cascade bbox.
+# Haar cascade tends to detect only the inner face; 0.25 expands to cover
+# the full face including forehead, hair, and chin.
+BBOX_PAD_FRAC = 0.25
+
 # Lazy-load OpenCV face detector (Haar cascade, no download)
 _detector = None
 
@@ -69,11 +74,18 @@ def detect_faces(frames: list[Frame]) -> list[DetectedFace]:
             confidence = 0.9
             if confidence < CONFIDENCE_THRESHOLD:
                 continue
+            # Expand bbox to cover full face (Haar cascade detects inner region only)
+            pad_x = int(w * BBOX_PAD_FRAC)
+            pad_y = int(h * BBOX_PAD_FRAC)
+            x_exp = max(0, x - pad_x)
+            y_exp = max(0, y - pad_y)
+            w_exp = min(img.shape[1] - x_exp, w + 2 * pad_x)
+            h_exp = min(img.shape[0] - y_exp, h + 2 * pad_y)
             results.append(
                 DetectedFace(
                     face_id=str(uuid.uuid4()),
                     frame_id=frame.frame_id,
-                    bbox=[float(x), float(y), float(w), float(h)],
+                    bbox=[float(x_exp), float(y_exp), float(w_exp), float(h_exp)],
                     confidence=confidence,
                     timestamp=frame.timestamp,
                 )

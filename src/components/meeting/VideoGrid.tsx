@@ -8,12 +8,15 @@ interface VideoGridProps {
   localVideoRef?: React.RefObject<HTMLVideoElement | null>;
   cameraOn?: boolean;
   detectedFaces?: DetectedFace[];
+  frameSourceWidth?: number;
+  frameSourceHeight?: number;
 }
 
-const VideoGrid = ({ participants, activeSpeakerId, localVideoRef, cameraOn = true, detectedFaces }: VideoGridProps) => {
-  // If only one active speaker or default, show main speaker large + small tiles
+const VideoGrid = ({ participants, activeSpeakerId, localVideoRef, cameraOn = true, detectedFaces, frameSourceWidth, frameSourceHeight }: VideoGridProps) => {
+  const localParticipant = participants.find((p) => p.isLocal);
   const mainSpeaker = participants.find((p) => p.id === activeSpeakerId) || participants[0];
   const others = participants.filter((p) => p.id !== mainSpeaker.id);
+  const isLocalTile = localParticipant != null && mainSpeaker.id === localParticipant.id;
 
   return (
     <div className="flex-1 relative">
@@ -24,7 +27,9 @@ const VideoGrid = ({ participants, activeSpeakerId, localVideoRef, cameraOn = tr
           isActiveSpeaker={activeSpeakerId === mainSpeaker.id}
           variant="large"
           streamRef={mainSpeaker.isLocal && cameraOn ? localVideoRef : undefined}
-          detectedFaces={mainSpeaker.isLocal ? detectedFaces : undefined}
+          detectedFaces={isLocalTile ? detectedFaces : undefined}
+          frameSourceWidth={isLocalTile ? frameSourceWidth : undefined}
+          frameSourceHeight={isLocalTile ? frameSourceHeight : undefined}
         />
       </div>
 

@@ -2,18 +2,17 @@ import { useEffect, useRef } from "react";
 import { Participant } from "@/types/meeting";
 import type { DetectedFace } from "@/lib/api";
 
-const FRAME_SOURCE_WIDTH = 640;
-const FRAME_SOURCE_HEIGHT = 480;
-
 interface ParticipantTileProps {
   participant: Participant;
   isActiveSpeaker: boolean;
   variant?: "large" | "small";
   streamRef?: React.RefObject<HTMLVideoElement | null>;
   detectedFaces?: DetectedFace[];
+  frameSourceWidth?: number;
+  frameSourceHeight?: number;
 }
 
-const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", streamRef, detectedFaces }: ParticipantTileProps) => {
+const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", streamRef, detectedFaces, frameSourceWidth, frameSourceHeight }: ParticipantTileProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   if (variant === "small") {
     return (
@@ -58,8 +57,8 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
     if (cw === 0 || ch === 0) return;
     canvas.width = cw;
     canvas.height = ch;
-    const scaleX = cw / FRAME_SOURCE_WIDTH;
-    const scaleY = ch / FRAME_SOURCE_HEIGHT;
+    const scaleX = cw / (frameSourceWidth ?? 640);
+    const scaleY = ch / (frameSourceHeight ?? 480);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, cw, ch);
@@ -75,7 +74,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
         Math.round(h * scaleY)
       );
     }
-  }, [streamRef, detectedFaces]);
+  }, [streamRef, detectedFaces, frameSourceWidth, frameSourceHeight]);
 
   return (
     <div

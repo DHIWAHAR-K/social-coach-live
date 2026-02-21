@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Frame } from "@/lib/api";
 
 const MAX_WIDTH = 640;
@@ -12,12 +12,19 @@ export function useFrameCapture(
   const bufferRef = useRef<Frame[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const capturingRef = useRef(false);
+  const videoRefRef = useRef(videoRef);
+  const intervalMsRef = useRef(captureIntervalMs);
+  videoRefRef.current = videoRef;
+  intervalMsRef.current = captureIntervalMs;
+
+  const [dimensions, setDimensions] = useState({ captureWidth: MAX_WIDTH, captureHeight: MAX_HEIGHT });
 
   const startFrameCapture = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     capturingRef.current = true;
+    const ms = intervalMsRef.current;
     intervalRef.current = setInterval(() => {
-      const video = videoRef.current;
+      const video = videoRefRef.current?.current;
       if (!video || video.readyState < 2 || video.paused) return;
       const vw = video.videoWidth;
       const vh = video.videoHeight;
@@ -35,6 +42,7 @@ export function useFrameCapture(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.drawImage(video, 0, 0, w, h);
+      setDimensions((prev) => (prev.captureWidth === w && prev.captureHeight === h ? prev : { captureWidth: w, captureHeight: h }));
       const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
       const image_base64 = dataUrl.startsWith(DATA_URL_PREFIX)
         ? dataUrl.slice(DATA_URL_PREFIX.length)
@@ -44,8 +52,8 @@ export function useFrameCapture(
         timestamp: Date.now() / 1000,
         image_base64,
       });
-    }, captureIntervalMs);
-  }, [videoRef, captureIntervalMs]);
+    }, ms);
+  }, []);
 
   const stopFrameCapture = useCallback(() => {
     capturingRef.current = false;
@@ -61,5 +69,5 @@ export function useFrameCapture(
     return frames;
   }, []);
 
-  return { startFrameCapture, stopFrameCapture, drainFrames };
+  return { startFrameCapture, stopFrameCapture, drainFrames, captureWidth: dimensions.captureWidth, captureHeight: dimensions.captureHeight };
 }

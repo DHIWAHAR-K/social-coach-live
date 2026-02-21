@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -37,7 +37,7 @@ app = FastAPI(title="Social Coach Orchestrator")
 # CORS so frontend (e.g. http://localhost:8080) can call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:8080,http://localhost:5173").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -210,6 +210,8 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
 
         # 4. Fuse into TurnForLLM (one main speaker for v1)
         for seg in asr_segments:
+            if seg.text.strip() == "(no speech detected)":
+                continue
             facial = _dominant_emotion_for_segment(seg, emotion_results)
             turn_id = str(uuid.uuid4())
             turn = TurnForLLM(
@@ -239,3 +241,33 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
                 raise HTTPException(status_code=502, detail="LLM service unavailable") from e
 
     return MediaAnalysisResponse(turns=turns, explanations=explanations, detected_faces=detected_faces)
+
+
+# --- WebSocket /ws/faces (real-time face detection) ---
+@app.websocket("/ws/faces")
+async def ws_faces(websocket: WebSocket):
+    """Real-time face detection stream.
+    Client sends one Frame as JSON; server replies immediately with list[DetectedFace] JSON.
+    """
+    await websocket.accept()
+    logger.info("Face detection WebSocket connected")
+    try:
+        while True:
+            data = await websocket.receive_json()
+            frame = Frame.model_validate(data)
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    r = await client.post(
+                        f"{YOLO_SERVICE_URL}/detect-faces",
+                        json=[frame.model_dump()],
+                    )
+                    r.raise_for_status()
+                    faces = [DetectedFace.model_validate(o) for o in r.json()]
+            except Exception as e:
+                logger.warning("YOLO call failed in WebSocket: %s", e)
+                faces = []
+            await websocket.send_json([f.model_dump() for f in faces])
+    except WebSocketDisconnect:
+        logger.info("Face detection WebSocket disconnected")
+    except Exception as e:
+        logger.exception("Unexpected WebSocket error: %s", e)

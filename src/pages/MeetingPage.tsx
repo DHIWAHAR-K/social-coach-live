@@ -4,10 +4,11 @@ import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
 import ExplanationPanel from "@/components/meeting/ExplanationPanel";
-import { analyzeMessage, analyzeMedia, formatExplanationForPanel, type DetectedFace } from "@/lib/api";
+import { analyzeMessage, analyzeMedia, formatExplanationForPanel } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaCapture } from "@/hooks/useMediaCapture";
 import { useFrameCapture } from "@/hooks/useFrameCapture";
+import { useRealtimeFaces } from "@/hooks/useRealtimeFaces";
 
 const PARTICIPANTS: Participant[] = [
   { id: "you", name: "You", color: "210 60% 45%", initial: "Y", isLocal: true },
@@ -19,6 +20,7 @@ const MeetingPage = () => {
   const { startCapture, stopCapture } = useMediaCapture();
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const { startFrameCapture, stopFrameCapture, drainFrames } = useFrameCapture(localVideoRef, 1000);
+  const { detectedFaces, captureWidth, captureHeight, connect: connectFaces, disconnect: disconnectFaces } = useRealtimeFaces();
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
@@ -30,7 +32,6 @@ const MeetingPage = () => {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [sendLoading, setSendLoading] = useState(false);
-  const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
 
   // Elapsed time timer
   useEffect(() => {
@@ -102,7 +103,6 @@ const MeetingPage = () => {
           setExplanations((prev) => [...prev, ...mapped]);
           setExplanation(mapped[mapped.length - 1]);
         }
-        setDetectedFaces(response.detected_faces ?? []);
       } catch (err) {
         toast({
           title: "Live Coach unavailable",
@@ -117,20 +117,23 @@ const MeetingPage = () => {
   const handleToggleLiveCoach = useCallback(async () => {
     if (liveCoachOn) {
       stopCapture();
+      stopFrameCapture();
       setLiveCoachOn(false);
       return;
     }
     try {
+      startFrameCapture();
       await startCapture(handleChunkReady);
       setLiveCoachOn(true);
     } catch (err) {
+      stopFrameCapture();
       toast({
         title: "Microphone access denied",
         description: err instanceof Error ? err.message : "Could not start Live Coach",
         variant: "destructive",
       });
     }
-  }, [liveCoachOn, startCapture, stopCapture, handleChunkReady, toast]);
+  }, [liveCoachOn, startCapture, stopCapture, startFrameCapture, stopFrameCapture, handleChunkReady, toast]);
 
   const handleToggleCamera = useCallback(async () => {
     try {
@@ -162,14 +165,15 @@ const MeetingPage = () => {
     }
   }, [cameraOn]);
 
-  // Start/stop frame capture when camera is on/off so frames are ready when Live Coach is on
+  // Connect/disconnect real-time face detection whenever camera state changes
   useEffect(() => {
     if (cameraOn) {
-      startFrameCapture();
-      return () => stopFrameCapture();
+      connectFaces(localVideoRef);
+    } else {
+      disconnectFaces();
     }
-    stopFrameCapture();
-  }, [cameraOn, startFrameCapture, stopFrameCapture]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cameraOn]);
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -189,7 +193,7 @@ const MeetingPage = () => {
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
-        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} cameraOn={cameraOn} detectedFaces={detectedFaces} />
+        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} cameraOn={cameraOn} detectedFaces={detectedFaces} frameSourceWidth={captureWidth} frameSourceHeight={captureHeight} />
 
         {/* Bottom-left meeting info */}
         <div className="absolute bottom-20 left-4 flex items-center gap-3 text-xs text-muted-foreground">
