@@ -24,6 +24,50 @@ export interface LLMExplanation {
   suggested_reply: string;
 }
 
+export interface Frame {
+  frame_id: string;
+  timestamp: number;
+  image_base64: string;
+}
+
+export interface AudioChunk {
+  chunk_id: string;
+  timestamp_start: number;
+  timestamp_end: number;
+  audio_base64: string;
+}
+
+export interface MediaRequest {
+  frames: Frame[];
+  audio_chunks: AudioChunk[];
+}
+
+export interface MediaAnalysisResponse {
+  turns: unknown[];
+  explanations: LLMExplanation[];
+}
+
+/**
+ * Send media (audio chunks + optional frames) to the orchestrator; returns turns and explanations.
+ * Throws on non-2xx or network error.
+ */
+export async function analyzeMedia(
+  req: MediaRequest
+): Promise<MediaAnalysisResponse> {
+  const res = await fetch(`${ORCHESTRATOR_URL}/analyze-media`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(
+      (detail as { detail?: string }).detail ?? `Request failed: ${res.status}`
+    );
+  }
+  return res.json() as Promise<MediaAnalysisResponse>;
+}
+
 /**
  * Send a chat message to the orchestrator; returns Social Coach explanation.
  * Throws on non-2xx or network error (caller should handle 502 / LLM unavailable).

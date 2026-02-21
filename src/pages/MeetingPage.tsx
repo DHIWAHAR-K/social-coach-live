@@ -5,14 +5,18 @@ import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
 import ExplanationPanel from "@/components/meeting/ExplanationPanel";
-import { analyzeMessage, formatExplanationForPanel } from "@/lib/api";
+import { analyzeMessage, analyzeMedia, formatExplanationForPanel } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useMediaCapture } from "@/hooks/useMediaCapture";
+
 const MeetingPage = () => {
   const { toast } = useToast();
+  const { startCapture, stopCapture } = useMediaCapture();
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
   const [explanationPanelOpen, setExplanationPanelOpen] = useState(true);
+  const [liveCoachOn, setLiveCoachOn] = useState(false);
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [explanations, setExplanations] = useState<Explanation[]>([]);
@@ -101,6 +105,51 @@ const MeetingPage = () => {
     [toast]
   );
 
+  const handleChunkReady = useCallback(
+    async (chunk: import("@/lib/api").AudioChunk): Promise<void> => {
+      try {
+        const response = await analyzeMedia({
+          frames: [],
+          audio_chunks: [chunk],
+        });
+        const mapped: Explanation[] = response.explanations.map((exp) => ({
+          id: exp.id,
+          captionId: exp.turn_id,
+          text: formatExplanationForPanel(exp),
+        }));
+        if (mapped.length > 0) {
+          setExplanations((prev) => [...prev, ...mapped]);
+          setExplanation(mapped[mapped.length - 1]);
+        }
+      } catch (err) {
+        toast({
+          title: "Live Coach unavailable",
+          description: err instanceof Error ? err.message : "Request failed",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast]
+  );
+
+  const handleToggleLiveCoach = useCallback(async () => {
+    if (liveCoachOn) {
+      stopCapture();
+      setLiveCoachOn(false);
+      return;
+    }
+    try {
+      await startCapture(handleChunkReady);
+      setLiveCoachOn(true);
+    } catch (err) {
+      toast({
+        title: "Microphone access denied",
+        description: err instanceof Error ? err.message : "Could not start Live Coach",
+        variant: "destructive",
+      });
+    }
+  }, [liveCoachOn, startCapture, stopCapture, handleChunkReady, toast]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -134,10 +183,12 @@ const MeetingPage = () => {
           cameraOn={cameraOn}
           coachOpen={coachOpen}
           explanationOpen={explanationPanelOpen}
+          liveCoachOn={liveCoachOn}
           onToggleMic={() => setMicOn((v) => !v)}
           onToggleCamera={() => setCameraOn((v) => !v)}
           onToggleCoach={() => setCoachOpen((v) => !v)}
           onToggleExplanation={() => setExplanationPanelOpen((v) => !v)}
+          onToggleLiveCoach={handleToggleLiveCoach}
           onEndSession={handleEndSession}
         />
       </div>
