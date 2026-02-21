@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Caption, Explanation, Participant } from "@/types/meeting";
 import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
@@ -16,6 +16,7 @@ const PARTICIPANTS: Participant[] = [
 const MeetingPage = () => {
   const { toast } = useToast();
   const { startCapture, stopCapture } = useMediaCapture();
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
   const [explanationPanelOpen, setExplanationPanelOpen] = useState(true);
@@ -126,6 +127,33 @@ const MeetingPage = () => {
     }
   }, [liveCoachOn, startCapture, stopCapture, handleChunkReady, toast]);
 
+  const handleToggleCamera = useCallback(async () => {
+    try {
+      if (cameraOn) {
+        const stream = localVideoRef.current?.srcObject as MediaStream | null | undefined;
+        if (stream?.getVideoTracks) {
+          stream.getVideoTracks().forEach((t) => t.stop());
+        }
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = null;
+        }
+        setCameraOn(false);
+      } else {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+        setCameraOn(true);
+      }
+    } catch (err) {
+      toast({
+        title: "Camera access denied",
+        description: err instanceof Error ? err.message : "Could not access camera",
+        variant: "destructive",
+      });
+    }
+  }, [cameraOn, toast]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -144,7 +172,7 @@ const MeetingPage = () => {
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
-        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} />
+        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} />
 
         {/* Bottom-left meeting info */}
         <div className="absolute bottom-20 left-4 flex items-center gap-3 text-xs text-muted-foreground">
@@ -160,7 +188,7 @@ const MeetingPage = () => {
           cameraOn={cameraOn}
           coachOpen={coachOpen}
           explanationOpen={explanationPanelOpen}
-          onToggleCamera={() => setCameraOn((v) => !v)}
+          onToggleCamera={handleToggleCamera}
           onToggleCoach={() => setCoachOpen((v) => !v)}
           onToggleExplanation={() => setExplanationPanelOpen((v) => !v)}
           onEndSession={handleEndSession}

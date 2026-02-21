@@ -4,9 +4,10 @@ interface ParticipantTileProps {
   participant: Participant;
   isActiveSpeaker: boolean;
   variant?: "large" | "small";
+  streamRef?: React.RefObject<HTMLVideoElement | null>;
 }
 
-const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large" }: ParticipantTileProps) => {
+const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", streamRef }: ParticipantTileProps) => {
   if (variant === "small") {
     return (
       <div
@@ -36,20 +37,31 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large" }: Pa
 
   return (
     <div
-      className="rounded-xl overflow-hidden flex items-center justify-center w-full h-full max-w-3xl max-h-[70vh]"
+      className="relative rounded-xl overflow-hidden flex items-center justify-center w-full h-full max-w-3xl max-h-[70vh]"
       style={{
         backgroundColor: `hsl(var(--meet-surface))`,
       }}
     >
-      <div
-        className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
-        style={{
-          backgroundColor: `hsl(${participant.color} / 0.3)`,
-          color: `hsl(${participant.color})`,
-        }}
-      >
-        {participant.initial}
-      </div>
+      {streamRef && (
+        <video
+          ref={streamRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover absolute inset-0 rounded-xl"
+        />
+      )}
+      {!streamRef && (
+        <div
+          className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
+          style={{
+            backgroundColor: `hsl(${participant.color} / 0.3)`,
+            color: `hsl(${participant.color})`,
+          }}
+        >
+          {participant.initial}
+        </div>
+      )}
 
       {/* Name at bottom-left of main view, Google Meet style */}
       <div className="absolute bottom-2 right-4">
