@@ -14,7 +14,7 @@ const VideoGrid = ({ participants, activeSpeakerId, localVideoRef, cameraOn = tr
   const others = participants.filter((p) => p.id !== mainSpeaker.id);
 
   return (
-    <div className="flex-1 relative bg-black">
+    <div className="flex-1 relative">
       {/* Main large tile */}
       <div className="absolute inset-0">
         <ParticipantTile

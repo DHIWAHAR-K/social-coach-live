@@ -37,7 +37,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
 
   return (
     <div
-      className="relative rounded-lg overflow-hidden flex items-center justify-center w-full h-full"
+      className="relative overflow-hidden flex items-center justify-center w-full h-full"
       style={{
         backgroundColor: streamRef ? "#000000" : `hsl(${participant.color} / 0.18)`,
       }}
