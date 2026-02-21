@@ -77,6 +77,17 @@ const MeetingPage = () => {
           frames: [],
           audio_chunks: [chunk],
         });
+        const turns = response.turns as { turn_id: string; speaker_id: string; speaker_name: string; text: string; start: number }[];
+        const mappedCaptions: Caption[] = turns.map((turn) => ({
+          id: turn.turn_id,
+          speakerId: turn.speaker_id,
+          speakerName: turn.speaker_name,
+          text: turn.text,
+          timestamp: turn.start,
+        }));
+        if (mappedCaptions.length > 0) {
+          setCaptions((prev) => [...prev, ...mappedCaptions]);
+        }
         const mapped: Explanation[] = response.explanations.map((exp) => ({
           id: exp.id,
           captionId: exp.turn_id,
