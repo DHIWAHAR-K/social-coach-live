@@ -19,9 +19,3 @@ export interface Explanation {
   captionId: string;
   text: string;
 }
-
-export interface MockScript {
-  speakerId: string;
-  text: string;
-  explanation: string;
-}

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Caption, Explanation } from "@/types/meeting";
-import { participants, scriptLines } from "@/data/mockConversation";
+import { Caption, Explanation, Participant } from "@/types/meeting";
 import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
@@ -8,6 +7,11 @@ import ExplanationPanel from "@/components/meeting/ExplanationPanel";
 import { analyzeMessage, analyzeMedia, formatExplanationForPanel } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaCapture } from "@/hooks/useMediaCapture";
+
+const PARTICIPANTS: Participant[] = [
+  { id: "you", name: "You", color: "210 60% 45%", initial: "Y", isLocal: true },
+  { id: "person-a", name: "Person A", color: "150 50% 40%", initial: "A", isLocal: false },
+];
 
 const MeetingPage = () => {
   const { toast } = useToast();
@@ -20,46 +24,9 @@ const MeetingPage = () => {
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [explanation, setExplanation] = useState<Explanation | null>(null);
   const [explanations, setExplanations] = useState<Explanation[]>([]);
-  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
-  const [scriptIndex, setScriptIndex] = useState(0);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [sendLoading, setSendLoading] = useState(false);
-
-  const addNextCaption = useCallback(() => {
-    if (scriptIndex >= scriptLines.length) return;
-
-    const line = scriptLines[scriptIndex];
-    const speaker = participants.find((p) => p.id === line.speakerId);
-    const captionId = `caption-${scriptIndex}`;
-
-    const newCaption: Caption = {
-      id: captionId,
-      speakerId: line.speakerId,
-      speakerName: speaker?.name || "Unknown",
-      text: line.text,
-      timestamp: Date.now(),
-    };
-
-    const newExplanation: Explanation = {
-      id: `exp-${scriptIndex}`,
-      captionId,
-      text: line.explanation,
-    };
-
-    setCaptions((prev) => [...prev, newCaption]);
-    setExplanation(newExplanation);
-    setExplanations((prev) => [...prev, newExplanation]);
-    setActiveSpeakerId(line.speakerId);
-    setScriptIndex((prev) => prev + 1);
-  }, [scriptIndex]);
-
-  useEffect(() => {
-    if (sessionEnded || scriptIndex >= scriptLines.length) return;
-    const delay = 4000 + Math.random() * 2000;
-    const timer = setTimeout(addNextCaption, delay);
-    return () => clearTimeout(timer);
-  }, [scriptIndex, sessionEnded, addNextCaption]);
 
   // Elapsed time timer
   useEffect(() => {
@@ -70,7 +37,6 @@ const MeetingPage = () => {
 
   const handleEndSession = () => {
     setSessionEnded(true);
-    setActiveSpeakerId(null);
   };
 
   const handleSendMessage = useCallback(
@@ -168,7 +134,7 @@ const MeetingPage = () => {
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
-        <VideoGrid participants={participants} activeSpeakerId={activeSpeakerId} />
+        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} />
 
         {/* Bottom-left meeting info */}
         <div className="absolute bottom-20 left-4 flex items-center gap-3 text-xs text-muted-foreground">

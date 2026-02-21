@@ -1,7 +1,6 @@
 import { Caption } from "@/types/meeting";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef } from "react";
-import { participants } from "@/data/mockConversation";
 import { Pin } from "lucide-react";
 
 interface CaptionsListProps {
