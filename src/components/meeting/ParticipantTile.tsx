@@ -39,7 +39,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
     <div
       className="relative rounded-lg overflow-hidden flex items-center justify-center w-full h-full"
       style={{
-        backgroundColor: "#000000",
+        backgroundColor: streamRef ? "#000000" : `hsl(${participant.color} / 0.18)`,
       }}
     >
       {streamRef && (
@@ -52,25 +52,20 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
         />
       )}
       {!streamRef && (
-        <div className="flex flex-col items-center justify-center">
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-semibold"
-            style={{
-              backgroundColor: `hsl(${participant.color} / 0.3)`,
-              color: `hsl(${participant.color})`,
-            }}
-          >
-            {participant.initial}
-          </div>
-          <p className="mt-3 text-white/80 text-sm font-medium">{participant.name}</p>
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-semibold"
+          style={{
+            backgroundColor: `hsl(${participant.color} / 0.35)`,
+            color: `hsl(${participant.color})`,
+          }}
+        >
+          {participant.initial}
         </div>
       )}
 
-      {/* Name pill at bottom-left, Google Meet style */}
-      <div className="absolute bottom-3 left-3">
-        <span className="inline-flex items-center bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-          {participant.name}
-        </span>
+      {/* Name label at bottom-left, Google Meet style */}
+      <div className="absolute bottom-2 left-3">
+        <span className="text-xs font-medium text-white/90">{participant.name}</span>
       </div>
     </div>
   );
