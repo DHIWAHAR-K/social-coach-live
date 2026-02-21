@@ -29,6 +29,15 @@ flowchart LR
 - **Orchestrator** (port 8000): Single entry point for the frontend; implements `POST /analyze-message` (chat → LLM) and a stubbed `POST /analyze-media` for future video/audio.
 - **YOLO / Emotion / ASR / LLM** (ports 8001–8004): Separate FastAPI services, each runnable in its own conda environment. Dotted lines indicate planned media pipeline (frames → faces → emotions; audio → transcripts; fusion → LLM).
 
+  Conda environments (one per service):
+
+  - **autism_1** — YOLO (face detection), port 8001
+  - **autism_2** — Emotion (FER), port 8002
+  - **autism_3** — ASR (Whisper), port 8003
+  - **autism_4** — LLM (Ollama), port 8004
+
+  Activate the corresponding env before running each service (e.g. from repo root: `conda activate autism_4` then `uvicorn services.llm_service.main:app --port 8004`).
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
