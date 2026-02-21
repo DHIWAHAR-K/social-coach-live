@@ -11,10 +11,19 @@ interface CoachPanelProps {
   onClose: () => void;
   captions: Caption[];
   explanation: Explanation | null;
+  onSendMessage?: (text: string) => Promise<void>;
+  sendLoading?: boolean;
 }
 
-const CoachPanel = ({ isOpen, onClose, captions, explanation }: CoachPanelProps) => {
+const CoachPanel = ({ isOpen, onClose, captions, explanation, onSendMessage, sendLoading = false }: CoachPanelProps) => {
   const [message, setMessage] = useState("");
+
+  const handleSend = async () => {
+    const text = message.trim();
+    if (!text || !onSendMessage) return;
+    await onSendMessage(text);
+    setMessage("");
+  };
 
   return (
     <aside
@@ -68,9 +77,16 @@ const CoachPanel = ({ isOpen, onClose, captions, explanation }: CoachPanelProps)
             placeholder="Send a message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="flex-1 bg-transparent text-[13px] text-[#e3e3e3] placeholder-[#9aa0a6] outline-none"
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            disabled={sendLoading}
+            className="flex-1 bg-transparent text-[13px] text-[#e3e3e3] placeholder-[#9aa0a6] outline-none disabled:opacity-70"
           />
-          <button className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors">
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={sendLoading || !message.trim()}
+            className="text-[#9aa0a6] hover:text-[#e3e3e3] transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          >
             <Send className="h-4 w-4" />
           </button>
         </div>

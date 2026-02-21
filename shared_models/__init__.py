@@ -8,6 +8,7 @@ from .models import (
     TurnForLLM,
     LLMExplanation,
     FaceWithCrop,
+    FaceCrop,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "TurnForLLM",
     "LLMExplanation",
     "FaceWithCrop",
+    "FaceCrop",
 ]

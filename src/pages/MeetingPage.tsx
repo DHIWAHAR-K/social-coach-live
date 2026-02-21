@@ -5,7 +5,10 @@ import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
 import ExplanationPanel from "@/components/meeting/ExplanationPanel";
+import { analyzeMessage, formatExplanationForPanel } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 const MeetingPage = () => {
+  const { toast } = useToast();
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
   const [coachOpen, setCoachOpen] = useState(true);
@@ -17,6 +20,7 @@ const MeetingPage = () => {
   const [scriptIndex, setScriptIndex] = useState(0);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [sendLoading, setSendLoading] = useState(false);
 
   const addNextCaption = useCallback(() => {
     if (scriptIndex >= scriptLines.length) return;
@@ -65,6 +69,38 @@ const MeetingPage = () => {
     setActiveSpeakerId(null);
   };
 
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      setSendLoading(true);
+      try {
+        const msg = {
+          id: `msg-${Date.now()}`,
+          speaker_id: "you",
+          speaker_name: "You",
+          text,
+          timestamp: Date.now() / 1000,
+        };
+        const result = await analyzeMessage(msg);
+        const exp: Explanation = {
+          id: result.id,
+          captionId: msg.id,
+          text: formatExplanationForPanel(result),
+        };
+        setExplanations((prev) => [...prev, exp]);
+        setExplanation(exp);
+      } catch (err) {
+        toast({
+          title: "Social Coach unavailable",
+          description: err instanceof Error ? err.message : "Request failed",
+          variant: "destructive",
+        });
+      } finally {
+        setSendLoading(false);
+      }
+    },
+    [toast]
+  );
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -112,6 +148,8 @@ const MeetingPage = () => {
         onClose={() => setCoachOpen(false)}
         captions={captions}
         explanation={explanation}
+        onSendMessage={handleSendMessage}
+        sendLoading={sendLoading}
       />
 
       {sessionEnded && (

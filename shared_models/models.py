@@ -18,6 +18,7 @@ class AudioChunk(BaseModel):
 
 class DetectedFace(BaseModel):
     face_id: str
+    frame_id: str  # which frame this face came from (for cropping in orchestrator)
     bbox: List[float]  # [x, y, w, h]
     confidence: float
     timestamp: float
@@ -66,3 +67,10 @@ class FaceWithCrop(BaseModel):
     confidence: float
     timestamp: float
     image_base64: str  # crop or full frame for this face
+
+
+# Simpler input for emotion service: just face_id, timestamp, and crop image
+class FaceCrop(BaseModel):
+    face_id: str
+    timestamp: float
+    image_base64: str

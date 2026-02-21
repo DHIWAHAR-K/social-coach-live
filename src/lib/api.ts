@@ -1,0 +1,66 @@
+/**
+ * Orchestrator API client. Frontend talks only to the orchestrator (single backend).
+ * Set VITE_ORCHESTRATOR_URL in .env (default http://localhost:8000).
+ */
+
+const ORCHESTRATOR_URL =
+  import.meta.env.VITE_ORCHESTRATOR_URL ?? "http://localhost:8000";
+
+export interface ChatMessage {
+  id: string;
+  speaker_id: string;
+  speaker_name: string;
+  text: string;
+  timestamp: number;
+}
+
+export interface LLMExplanation {
+  id: string;
+  turn_id: string;
+  speaker_id: string;
+  intent_summary: string;
+  emotional_state: string;
+  suggested_interpretation: string;
+  suggested_reply: string;
+}
+
+/**
+ * Send a chat message to the orchestrator; returns Social Coach explanation.
+ * Throws on non-2xx or network error (caller should handle 502 / LLM unavailable).
+ */
+export async function analyzeMessage(
+  msg: ChatMessage
+): Promise<LLMExplanation> {
+  const res = await fetch(`${ORCHESTRATOR_URL}/analyze-message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      id: msg.id,
+      speaker_id: msg.speaker_id,
+      speaker_name: msg.speaker_name,
+      text: msg.text,
+      timestamp: msg.timestamp,
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(
+      (detail as { detail?: string }).detail ?? `Request failed: ${res.status}`
+    );
+  }
+  return res.json() as Promise<LLMExplanation>;
+}
+
+/** Format LLMExplanation as a single string for the left Social Coach panel. */
+export function formatExplanationForPanel(exp: LLMExplanation): string {
+  const parts: string[] = [];
+  if (exp.intent_summary)
+    parts.push(`Intent: ${exp.intent_summary}`);
+  if (exp.emotional_state)
+    parts.push(`Emotional state: ${exp.emotional_state}`);
+  if (exp.suggested_interpretation)
+    parts.push(`Interpretation: ${exp.suggested_interpretation}`);
+  if (exp.suggested_reply)
+    parts.push(`Suggested reply: ${exp.suggested_reply}`);
+  return parts.length ? parts.join("\n\n") : "No explanation available.";
+}
