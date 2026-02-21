@@ -4,7 +4,7 @@ import VideoGrid from "@/components/meeting/VideoGrid";
 import BottomControls from "@/components/meeting/BottomControls";
 import CoachPanel from "@/components/meeting/CoachPanel";
 import ExplanationPanel from "@/components/meeting/ExplanationPanel";
-import { analyzeMessage, analyzeMedia, formatExplanationForPanel } from "@/lib/api";
+import { analyzeMessage, analyzeMedia, formatExplanationForPanel, type DetectedFace } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaCapture } from "@/hooks/useMediaCapture";
 import { useFrameCapture } from "@/hooks/useFrameCapture";
@@ -30,6 +30,7 @@ const MeetingPage = () => {
   const [sessionEnded, setSessionEnded] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [sendLoading, setSendLoading] = useState(false);
+  const [detectedFaces, setDetectedFaces] = useState<DetectedFace[]>([]);
 
   // Elapsed time timer
   useEffect(() => {
@@ -101,6 +102,7 @@ const MeetingPage = () => {
           setExplanations((prev) => [...prev, ...mapped]);
           setExplanation(mapped[mapped.length - 1]);
         }
+        setDetectedFaces(response.detected_faces ?? []);
       } catch (err) {
         toast({
           title: "Live Coach unavailable",
@@ -114,13 +116,11 @@ const MeetingPage = () => {
 
   const handleToggleLiveCoach = useCallback(async () => {
     if (liveCoachOn) {
-      stopFrameCapture();
       stopCapture();
       setLiveCoachOn(false);
       return;
     }
     try {
-      startFrameCapture();
       await startCapture(handleChunkReady);
       setLiveCoachOn(true);
     } catch (err) {
@@ -130,7 +130,7 @@ const MeetingPage = () => {
         variant: "destructive",
       });
     }
-  }, [liveCoachOn, startFrameCapture, stopFrameCapture, startCapture, stopCapture, handleChunkReady, toast]);
+  }, [liveCoachOn, startCapture, stopCapture, handleChunkReady, toast]);
 
   const handleToggleCamera = useCallback(async () => {
     try {
@@ -162,6 +162,15 @@ const MeetingPage = () => {
     }
   }, [cameraOn]);
 
+  // Start/stop frame capture when camera is on/off so frames are ready when Live Coach is on
+  useEffect(() => {
+    if (cameraOn) {
+      startFrameCapture();
+      return () => stopFrameCapture();
+    }
+    stopFrameCapture();
+  }, [cameraOn, startFrameCapture, stopFrameCapture]);
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const sec = s % 60;
@@ -180,7 +189,7 @@ const MeetingPage = () => {
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 relative">
         {/* Video area */}
-        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} cameraOn={cameraOn} />
+        <VideoGrid participants={PARTICIPANTS} activeSpeakerId={null} localVideoRef={localVideoRef} cameraOn={cameraOn} detectedFaces={detectedFaces} />
 
         {/* Bottom-left meeting info */}
         <div className="absolute bottom-20 left-4 flex items-center gap-3 text-xs text-muted-foreground">

@@ -134,6 +134,7 @@ class MediaRequest(BaseModel):
 class MediaAnalysisResponse(BaseModel):
     turns: list[TurnForLLM]
     explanations: list[LLMExplanation]
+    detected_faces: list[DetectedFace] = []
 
 
 @app.post("/analyze-media", response_model=MediaAnalysisResponse)
@@ -237,4 +238,4 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
                 logger.exception("LLM service failed for turn %s: %s", turn.turn_id, e)
                 raise HTTPException(status_code=502, detail="LLM service unavailable") from e
 
-    return MediaAnalysisResponse(turns=turns, explanations=explanations)
+    return MediaAnalysisResponse(turns=turns, explanations=explanations, detected_faces=detected_faces)

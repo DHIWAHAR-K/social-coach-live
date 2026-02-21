@@ -1,13 +1,20 @@
+import { useEffect, useRef } from "react";
 import { Participant } from "@/types/meeting";
+import type { DetectedFace } from "@/lib/api";
+
+const FRAME_SOURCE_WIDTH = 640;
+const FRAME_SOURCE_HEIGHT = 480;
 
 interface ParticipantTileProps {
   participant: Participant;
   isActiveSpeaker: boolean;
   variant?: "large" | "small";
   streamRef?: React.RefObject<HTMLVideoElement | null>;
+  detectedFaces?: DetectedFace[];
 }
 
-const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", streamRef }: ParticipantTileProps) => {
+const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", streamRef, detectedFaces }: ParticipantTileProps) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   if (variant === "small") {
     return (
       <div
@@ -35,6 +42,41 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
     );
   }
 
+  // Draw face bboxes on canvas overlay when we have video and detected faces
+  useEffect(() => {
+    const video = streamRef?.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !detectedFaces?.length) {
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
+    const cw = video.clientWidth;
+    const ch = video.clientHeight;
+    if (cw === 0 || ch === 0) return;
+    canvas.width = cw;
+    canvas.height = ch;
+    const scaleX = cw / FRAME_SOURCE_WIDTH;
+    const scaleY = ch / FRAME_SOURCE_HEIGHT;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.strokeStyle = "#22c55e";
+    ctx.lineWidth = 2;
+    for (const face of detectedFaces) {
+      const [x, y, w, h] = face.bbox;
+      if (face.bbox.length < 4) continue;
+      ctx.strokeRect(
+        Math.round(x * scaleX),
+        Math.round(y * scaleY),
+        Math.round(w * scaleX),
+        Math.round(h * scaleY)
+      );
+    }
+  }, [streamRef, detectedFaces]);
+
   return (
     <div
       className="relative overflow-hidden flex items-center justify-center w-full h-full"
@@ -49,6 +91,13 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
           playsInline
           muted
           className="w-full h-full object-cover absolute inset-0"
+        />
+      )}
+      {streamRef && detectedFaces && detectedFaces.length > 0 && (
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ objectFit: "cover" }}
         />
       )}
       {!streamRef && (

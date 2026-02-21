@@ -37,6 +37,14 @@ export interface AudioChunk {
   audio_base64: string;
 }
 
+export interface DetectedFace {
+  face_id: string;
+  frame_id: string;
+  bbox: number[];
+  confidence: number;
+  timestamp: number;
+}
+
 export interface MediaRequest {
   frames: Frame[];
   audio_chunks: AudioChunk[];
@@ -45,6 +53,7 @@ export interface MediaRequest {
 export interface MediaAnalysisResponse {
   turns: unknown[];
   explanations: LLMExplanation[];
+  detected_faces?: DetectedFace[];
 }
 
 /**
