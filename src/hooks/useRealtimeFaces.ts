@@ -4,7 +4,7 @@ import type { DetectedFace } from "@/lib/api";
 const MAX_WIDTH = 640;
 const MAX_HEIGHT = 480;
 const DATA_URL_PREFIX = "data:image/jpeg;base64,";
-const FRAME_INTERVAL_MS = 333; // ~3 fps
+const FRAME_INTERVAL_MS = 100; // ~10 fps
 
 const ORCHESTRATOR_URL =
   (import.meta.env.VITE_ORCHESTRATOR_URL as string | undefined) ??

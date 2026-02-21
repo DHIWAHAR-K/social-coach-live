@@ -67,8 +67,15 @@ def detect_faces(frames: list[Frame]) -> list[DetectedFace]:
             logger.warning("Skip frame %s: decode failed: %s", frame.frame_id, e)
             continue
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # scaleFactor, minNeighbors; minSize optional
-        boxes = detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        # minSize scales with frame so distant/small faces are still caught
+        img_h, img_w = img.shape[:2]
+        min_face_px = max(20, int(min(img_w, img_h) * 0.08))
+        boxes = detector.detectMultiScale(
+            gray,
+            scaleFactor=1.05,
+            minNeighbors=3,
+            minSize=(min_face_px, min_face_px),
+        )
         for (x, y, w, h) in boxes:
             # OpenCV cascade does not return confidence; use fixed value for v1
             confidence = 0.9
