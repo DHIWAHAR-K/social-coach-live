@@ -52,33 +52,48 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
       }
       return;
     }
-    const cw = video.clientWidth;
-    const ch = video.clientHeight;
-    if (cw === 0 || ch === 0) return;
-    canvas.width = cw;
-    canvas.height = ch;
-    // object-cover applies a single uniform scale then center-crops.
-    // Using two separate axis ratios causes misalignment on non-matching aspect ratios.
-    const fw = frameSourceWidth ?? 640;
-    const fh = frameSourceHeight ?? 480;
-    const scale = Math.max(cw / fw, ch / fh);
-    const offsetX = (fw * scale - cw) / 2;
-    const offsetY = (fh * scale - ch) / 2;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, cw, ch);
-    ctx.strokeStyle = "#22c55e";
-    ctx.lineWidth = 4;
-    for (const face of detectedFaces) {
-      const [x, y, w, h] = face.bbox;
-      if (face.bbox.length < 4) continue;
-      ctx.strokeRect(
-        Math.round(x * scale - offsetX),
-        Math.round(y * scale - offsetY),
-        Math.round(w * scale),
-        Math.round(h * scale)
-      );
-    }
+
+    const draw = () => {
+      // Use canvas's own rendered dimensions so it's correct on any screen size
+      const cw = canvas.offsetWidth;
+      const ch = canvas.offsetHeight;
+      if (cw === 0 || ch === 0) return;
+
+      // Keep canvas internal resolution in sync with its CSS size
+      canvas.width = cw;
+      canvas.height = ch;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(0, 0, cw, ch);
+
+      // object-cover: single uniform scale that covers both axes, then center-crop
+      const fw = frameSourceWidth ?? 640;
+      const fh = frameSourceHeight ?? 480;
+      const scale = Math.max(cw / fw, ch / fh);
+      const offsetX = (fw * scale - cw) / 2;
+      const offsetY = (fh * scale - ch) / 2;
+
+      ctx.strokeStyle = "#8b5cf6";
+      ctx.lineWidth = 4;
+      for (const face of detectedFaces) {
+        if (face.bbox.length < 4) continue;
+        const [x, y, w, h] = face.bbox;
+        ctx.strokeRect(
+          Math.round(x * scale - offsetX),
+          Math.round(y * scale - offsetY),
+          Math.round(w * scale),
+          Math.round(h * scale)
+        );
+      }
+    };
+
+    draw();
+
+    // Redraw whenever the tile is resized (handles any screen size or panel toggle)
+    const ro = new ResizeObserver(draw);
+    ro.observe(canvas);
+    return () => ro.disconnect();
   }, [streamRef, detectedFaces, frameSourceWidth, frameSourceHeight]);
 
   return (
