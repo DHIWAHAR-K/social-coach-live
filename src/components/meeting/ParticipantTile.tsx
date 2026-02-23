@@ -68,7 +68,7 @@ const ParticipantTile = ({ participant, isActiveSpeaker, variant = "large", stre
     if (!ctx) return;
     ctx.clearRect(0, 0, cw, ch);
     ctx.strokeStyle = "#22c55e";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     for (const face of detectedFaces) {
       const [x, y, w, h] = face.bbox;
       if (face.bbox.length < 4) continue;
