@@ -77,7 +77,7 @@ def analyze_message(msg: ChatMessage) -> LLMExplanation:
     )
     logger.info("Calling LLM service at %s/explain-turn", LLM_SERVICE_URL)
     try:
-        with httpx.Client(timeout=60.0) as client:
+        with httpx.Client(timeout=130.0) as client:
             r = client.post(
                 f"{LLM_SERVICE_URL}/explain-turn",
                 json=turn.model_dump(),
@@ -86,10 +86,17 @@ def analyze_message(msg: ChatMessage) -> LLMExplanation:
             return LLMExplanation.model_validate(r.json())
     except httpx.HTTPStatusError as e:
         logger.error("LLM service returned %s: %s", e.response.status_code, e.response.text)
-        raise HTTPException(status_code=502, detail="LLM service unavailable") from e
-    except (httpx.ConnectError, httpx.TimeoutException) as e:
-        logger.error("LLM service request failed: %s", e)
-        raise HTTPException(status_code=502, detail="LLM service unavailable") from e
+        try:
+            detail = e.response.json().get("detail", "LLM service unavailable")
+        except Exception:
+            detail = "LLM service unavailable"
+        raise HTTPException(status_code=502, detail=detail) from e
+    except httpx.ConnectError as e:
+        logger.error("LLM service not reachable: %s", e)
+        raise HTTPException(status_code=502, detail="LLM service not running (port 8004)") from e
+    except httpx.TimeoutException as e:
+        logger.error("LLM service timed out: %s", e)
+        raise HTTPException(status_code=504, detail="LLM service timed out") from e
 
 
 # --- Helpers for /analyze-media ---
@@ -236,9 +243,19 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
                 )
                 r.raise_for_status()
                 explanations.append(LLMExplanation.model_validate(r.json()))
-            except (httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException) as e:
+            except httpx.HTTPStatusError as e:
                 logger.exception("LLM service failed for turn %s: %s", turn.turn_id, e)
-                raise HTTPException(status_code=502, detail="LLM service unavailable") from e
+                try:
+                    detail = e.response.json().get("detail", "LLM service unavailable")
+                except Exception:
+                    detail = "LLM service unavailable"
+                raise HTTPException(status_code=502, detail=detail) from e
+            except httpx.ConnectError as e:
+                logger.exception("LLM service not reachable for turn %s: %s", turn.turn_id, e)
+                raise HTTPException(status_code=502, detail="LLM service not running (port 8004)") from e
+            except httpx.TimeoutException as e:
+                logger.exception("LLM service timed out for turn %s: %s", turn.turn_id, e)
+                raise HTTPException(status_code=504, detail="LLM service timed out") from e
 
     return MediaAnalysisResponse(turns=turns, explanations=explanations, detected_faces=detected_faces)
 

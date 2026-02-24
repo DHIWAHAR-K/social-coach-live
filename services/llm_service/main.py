@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="LLM Social Coach Service")
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:70b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b-instruct-q5_k_m")
 
 
 SYSTEM_PROMPT = """You are a social communication coach for neurodivergent users (especially autistic users).
@@ -50,6 +50,7 @@ def _call_llm(turn: TurnForLLM) -> LLMExplanation:
     payload = {
         "model": OLLAMA_MODEL,
         "stream": False,
+        "format": "json",
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_content},
@@ -71,7 +72,11 @@ def _call_llm(turn: TurnForLLM) -> LLMExplanation:
         ) from e
     except httpx.HTTPStatusError as e:
         logger.exception("Ollama returned %s: %s", e.response.status_code, e.response.text)
-        raise HTTPException(status_code=502, detail="Ollama request failed") from e
+        try:
+            detail = e.response.json().get("error", "Ollama request failed")
+        except Exception:
+            detail = "Ollama request failed"
+        raise HTTPException(status_code=502, detail=f"Ollama: {detail}") from e
     except httpx.TimeoutException as e:
         logger.exception("Ollama request timed out: %s", e)
         raise HTTPException(status_code=504, detail="Ollama request timed out") from e
