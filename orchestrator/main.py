@@ -215,7 +215,17 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
                 logger.exception("ASR service failed: %s", e)
                 raise HTTPException(status_code=502, detail="ASR service unavailable") from e
 
-        # 4. Fuse into TurnForLLM (one main speaker for v1)
+        # 4. Fuse into TurnForLLM; use diarization speaker_id when available
+        def _speaker_name(speaker_id: str) -> str:
+            """Map SPEAKER_00/01 or speaker_1 to friendly names."""
+            if speaker_id.startswith("SPEAKER_"):
+                try:
+                    idx = int(speaker_id.replace("SPEAKER_", ""))
+                    return f"Person {chr(65 + (idx % 26))}"  # A, B, C...
+                except ValueError:
+                    pass
+            return "Person B"  # fallback for speaker_1
+
         for seg in asr_segments:
             if seg.text.strip() == "(no speech detected)":
                 continue
@@ -224,7 +234,7 @@ def analyze_media(req: MediaRequest) -> MediaAnalysisResponse:
             turn = TurnForLLM(
                 turn_id=turn_id,
                 speaker_id=seg.speaker_id,
-                speaker_name="Person B",
+                speaker_name=_speaker_name(seg.speaker_id),
                 text=seg.text,
                 facial_emotion=facial,
                 vocal_emotion=None,

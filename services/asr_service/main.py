@@ -1,7 +1,7 @@
 """
-ASR + diarization service (Whisper / faster-whisper).
-Concatenates audio chunks, transcribes with faster-whisper; v1 uses single speaker_id.
-TODO: plug in diart/pyannote for real diarization.
+ASR + diarization service (Whisper / faster-whisper + Diart).
+Concatenates audio chunks, transcribes with faster-whisper, optionally runs real-time
+speaker diarization via Diart when DIARIZATION_ENABLED=true.
 Run from repo root: PYTHONPATH=. uvicorn services.asr_service.main:app --port 8003
 """
 import base64
@@ -100,34 +100,59 @@ def transcribe(chunks: list[AudioChunk]) -> list[ASRSegment]:
 
     # Run Whisper (to temp file for faster_whisper which prefers file path)
     model = _get_model()
+    wav_path = None
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        try:
-            import wave
-            with wave.open(f.name, "wb") as wav:
-                wav.setnchannels(1)
-                wav.setsampwidth(2)
-                wav.setframerate(16000)
-                wav.writeframes((audio * 32767).astype(np.int16).tobytes())
-            segments_iter, info = model.transcribe(f.name, language=None, word_timestamps=False)
-            segments_list = list(segments_iter)
-        finally:
-            Path(f.name).unlink(missing_ok=True)
+        import wave
+        with wave.open(f.name, "wb") as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(16000)
+            wav.writeframes((audio * 32767).astype(np.int16).tobytes())
+        wav_path = f.name
 
-    # Build ASRSegment list; v1 single speaker, split by Whisper segments
-    out = []
-    for i, seg in enumerate(segments_list):
-        text = (seg.text or "").strip()
-        if not text:
-            continue
-        out.append(
-            ASRSegment(
-                segment_id=str(uuid.uuid4()),
-                speaker_id="speaker_1",
-                text=text,
-                start=seg.start,
-                end=seg.end,
+    try:
+        segments_iter, info = model.transcribe(wav_path, language=None, word_timestamps=False)
+        segments_list = list(segments_iter)
+
+        # Run diarization on same wav file (when DIARIZATION_ENABLED=true)
+        diar_segments: list = []
+        try:
+            from .diarization import run_diarization
+            diar_segments = run_diarization(wav_path, sample_rate=16000)
+            if diar_segments:
+                logger.info("Diarization found %d speaker segment(s)", len(diar_segments))
+        except Exception as e:
+            logger.warning("Diarization skipped: %s", e)
+
+        def _assign_speaker(seg_start: float, seg_end: float) -> str:
+            if not diar_segments:
+                return "speaker_1"
+            best_speaker, best_overlap = "speaker_1", 0.0
+            for d_start, d_end, speaker in diar_segments:
+                o_start, o_end = max(seg_start, d_start), min(seg_end, d_end)
+                if o_end > o_start and (o_end - o_start) > best_overlap:
+                    best_overlap = o_end - o_start
+                    best_speaker = speaker
+            return best_speaker
+
+        # Build ASRSegment list; assign speaker from diarization or fallback to speaker_1
+        out = []
+        for seg in segments_list:
+            text = (seg.text or "").strip()
+            if not text:
+                continue
+            speaker_id = _assign_speaker(seg.start, seg.end)
+            out.append(
+                ASRSegment(
+                    segment_id=str(uuid.uuid4()),
+                    speaker_id=speaker_id,
+                    text=text,
+                    start=seg.start,
+                    end=seg.end,
+                )
             )
-        )
+    finally:
+        Path(wav_path).unlink(missing_ok=True)
 
     if not out:
         out = [

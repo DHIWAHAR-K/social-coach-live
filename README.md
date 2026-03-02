@@ -42,7 +42,7 @@ Each backend service runs in its own conda environment.
 - **LLM coaching** — explains conversational intent, emotional state, and provides a suggested reply
 - **Face detection** — real-time YOLO-based face detection via WebSocket stream
 - **Emotion recognition** — FER-based facial emotion classification per detected face crop
-- **Speech transcription** — Whisper ASR with speaker diarization for audio segments
+- **Speech transcription** — Whisper ASR with optional real-time speaker diarization (Diart) for audio segments
 - **Multimodal fusion** — orchestrator fuses facial emotion + ASR transcript per turn before LLM call
 - **Shared Pydantic models** — typed data contracts across all services via `shared_models/`
 - **Neurodivergent-focused UI** — clear, low-distraction meeting interface with coach panel and captions
@@ -153,7 +153,22 @@ conda activate autism_3 && PYTHONPATH=. uvicorn services.asr_service.main:app --
 - `POST /classify-emotions` — classify emotion per face crop
 
 **ASR Service (port 8003)**
-- `POST /transcribe` — transcribe audio chunks with Whisper
+- `POST /transcribe` — transcribe audio chunks with Whisper; optionally run speaker diarization when `DIARIZATION_ENABLED=true`
+
+## Real-time Speaker Diarization (optional)
+
+To enable real-time speaker diarization (separate "you" vs conversation partner):
+
+1. Install diart and pyannote (included in ASR service requirements)
+2. Accept user conditions for [pyannote/segmentation](https://huggingface.co/pyannote/segmentation) and [pyannote/embedding](https://huggingface.co/pyannote/embedding) on Hugging Face
+3. Log in: `huggingface-cli login` or set `HF_TOKEN`
+4. Set `DIARIZATION_ENABLED=true` when starting the ASR service
+
+```bash
+DIARIZATION_ENABLED=true HF_TOKEN=your_token conda activate autism_3 && PYTHONPATH=. uvicorn services.asr_service.main:app --port 8003
+```
+
+When disabled or if diart is unavailable, all segments use a single speaker ID.
 
 ## LLM System Prompt
 
